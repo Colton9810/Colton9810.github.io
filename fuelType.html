@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html>
+<script src='https://d3js.org/d3.v5.min.js'></script>
+<script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
+<body onload='init()'> <!-- Automatically load the init function -->
+
+<!-- Create the div for my headers -->
+<div style="text-align:center;">
+<h1>Efficiency by Fuel Type</h1>
+</div>
+
+<!-- Create the div for the main slide show -->
+<div style="text-align:center;">
+<svg id="svgMain" width="500" height="500" style="background-color:beige"></svg>
+</div>
+<div style="text-align:center;">
+<svg id="svgNav" width="200" height="200"></svg>
+</div>
+
+<script>
+
+async function init() {
+   const data = await d3.csv
+      ('https://flunky.github.io/cars2017.csv')
+   
+   const diesel = data.filter((d) => (d.Fuel == "Diesel")).slice().sort((a,b)=>d3.descending(a.AverageCityMPG, b.AverageCityMPG));
+   const electric = data.filter((d) => (d.Fuel == "Electricity")).slice().sort((a,b)=>d3.descending(a.AverageCityMPG, b.AverageCityMPG));
+   const gasoline = data.filter((d) => (d.Fuel == "Gasoline")).slice().sort((a,b)=>d3.descending(a.AverageCityMPG, b.AverageCityMPG));
+
+   const dieselAvg = d3.mean(diesel, d => d.AverageCityMPG)
+   const electricAvg = d3.mean(electric, d => d.AverageCityMPG)
+   const gasolineAvg = d3.mean(gasoline, d => d.AverageCityMPG)
+
+   dataAvg= 
+    [
+    {"Type":"Diesel","Average":dieselAvg},
+    {"Type":"Electric","Average":electricAvg},
+    {"Type":"Gasoline","Average":gasolineAvg}
+   ];
+
+   var xs = d3.scaleBand().domain(["Diesel","Electric", "Gasoline"]).range([0,500]);
+   var ys = d3.scaleLinear().domain([0,150]).range([500,0]);
+
+   var rightArrow = d3.select(svgNav).append("g")
+    .attr("transform", "translate(150,0) scale(0.5, 1.0)")
+
+    .append("a")
+    .attr("xlink:href", "numCylinders.html")
+    .append("path")
+    .attr("d", "M 20 0 L 30 0 L 60 30 L 30 60 L20 60 L 50 30 Z")
+    .attr("fill", "lightblue")
+
+    .on("mouseover", function() {
+        d3.select(this)
+        .attr("fill", "blue");
+    })
+    .on("mouseout", function() {
+        d3.select(this)
+        .attr("fill", "lightblue");
+    });
+
+    var leftArrow = d3.select(svgNav).append("g")
+    .attr("transform", "translate(100,60) scale(0.5, 1.0) rotate(180)")
+
+    .append("a")
+    .attr("xlink:href", "index.html")
+    .append("path")
+    .attr("d", "M 20 0 L 30 0 L 60 30 L 30 60 L20 60 L 50 30 Z")
+    .attr("fill", "lightblue")
+
+    .on("mouseover", function() {
+        d3.select(this)
+        .attr("fill", "blue");
+    })
+    .on("mouseout", function() {
+        d3.select(this)
+        .attr("fill", "lightblue");
+    });
+
+   const xAxis = d3.axisBottom(xs)
+                .tickValues(["Diesel", "Electric", "Gasoline"])
+ 
+   const yAxis = d3.axisLeft(ys)
+                .tickValues([10, 20, 30, 40, 90, 150])
+
+   d3.select('svg').append('g')
+                .attr('transform', 'translate(25,400)')
+                .call(xAxis);
+   d3.select('svg').append('g')
+                .attr('transform', 'translate(20,-100)')
+                .call(yAxis); 
+
+   d3.select('svg').selectAll('rect')
+                .data(dataAvg)
+                .enter()
+                .append('rect')
+                .attr('transform', 'translate(85,-100)')
+                .attr('x', function (d) {return xs(d.Type)})
+                .attr('y', function (d) { return ys(d.Average) })
+                .attr('width', 50)
+                .attr('height', function (d) {return ys(0) -ys(d.Average) })
+                .attr('fill', 'lightblue')
+                .attr('stroke', 'black') 
+
+   d3.select('svg').append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -10)
+    .attr("y", 100)
+    .attr("dy", "-5.1em")
+    .attr("text-anchor", "end")
+    .attr("stroke", "black")
+    .text("Milage");
+
+
+   const summary = [
+{
+    note: {
+    label: "Gasoline performs slightly worse than diesel does.",
+    align: "left",
+    wrap: 180,
+    padding: 3
+    },
+    color: "black",
+    x: 450,
+    y: 355,
+    dy: -60,
+    dx: -130
+}
+]
+
+var buildAnnotation = d3.annotation().annotations(summary)
+d3.select('svg').append("g")
+    .style("font-size", "12px")
+    .call(buildAnnotation)
+}
+
+
+</script>
+</body>
+</html>

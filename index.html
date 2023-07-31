@@ -1,17 +1,21 @@
 <!DOCTYPE HTML>
 <html>
 <script src='https://d3js.org/d3.v5.min.js'></script>
+<script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
+</style>
 <body onload='init()'> <!-- Automatically load the init function -->
 
 <!-- Create the div for my headers -->
 <div style="text-align:center;">
-<h1>Interactive Website</h1>
-<h3>Jimmie Gann</h3>
+<h1>Fuel Efficiency Overview</h1>
 </div>
 
 <!-- Create the div for the main slide show -->
 <div style="text-align:center;">
-<svg id="svgMain" align="center" width="200" height="200"></svg>
+<svg id="svgMain" width="500" height="500" style="background-color:beige"></svg>
+</div>
+<div style="text-align:center;">
+<svg id="svgNav" width="200" height="200"></svg>
 </div>
 
 <script>
@@ -20,9 +24,27 @@ async function init() {
    const data = await d3.csv
       ('https://flunky.github.io/cars2017.csv')
 
-   xs = d3.scaleLog().domain([10,150]).range([0,200]);
-   ys = d3.scaleLog().domain([10,150]).range([200,0]);
-   cs = d3.scaleLinear().domain([0,100]).range([0,200]);
+   var xs = d3.scaleLog().domain([10,150]).range([0,500]);
+   var ys = d3.scaleLog().domain([10,150]).range([500,0]);
+   var tooltip = d3.select("#tooltip");
+
+   var rightArrow = d3.select(svgNav).append("g")
+    .attr("transform", "translate(150,0) scale(0.5, 1.0)")
+
+    .append("a")
+    .attr("xlink:href", "fuelType.html")
+    .append("path")
+    .attr("d", "M 20 0 L 30 0 L 60 30 L 30 60 L20 60 L 50 30 Z")
+    .attr("fill", "lightblue")
+
+    .on("mouseover", function() {
+        d3.select(this)
+        .attr("fill", "blue");
+    })
+    .on("mouseout", function() {
+        d3.select(this)
+        .attr("fill", "lightblue");
+    });
 
    const xAxis = d3.axisBottom(xs)
                 .tickValues([10, 20, 50, 100])
@@ -31,24 +53,61 @@ async function init() {
                 .tickValues([10, 20, 50, 100])
                 .tickFormat(d3.format('~s')); 
 
-d3.select('svg').selectAll('circle')
+   d3.select('svg').selectAll('circle')
                 .data(data)
                 .enter()
                 .append('circle')
-                .attr('cx', d => xs(d.AverageCityMPG))
-                .attr('cy', d => ys(d.AverageHighwayMPG))
-                .attr('r', d => d.EngineCylinders)
+                .attr("cx", function (d) { return xs(d.AverageCityMPG); } )
+                .attr("cy", function (d) { return ys(d.AverageHighwayMPG); } )
+                .attr("r", function (d) { return +d.EngineCylinders+2; })
                 .attr('fill', 'lightblue')
-                .attr('stroke', 'black'); 
+                .attr('stroke', 'black') 
+                .attr('transform', 'translate(20,-20)')
    
-
    d3.select('svg').append('g')
-                .attr('transform', 'translate(20,180)')
+                .attr('transform', 'translate(25,400)')
                 .call(xAxis);
    d3.select('svg').append('g')
-                .attr('transform', 'translate(20,-20)')
+                .attr('transform', 'translate(20,-100)')
                 .call(yAxis); 
 
+   d3.select('svg').append('text')
+    .attr("x", 300)
+    .attr("y", 415)
+    .attr("text-anchor", "end")
+    .attr("stroke", "black")
+    .text("City Milage")
+   d3.select('svg').append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -150)
+    .attr("y", 95)
+    .attr("dy", "-5.1em")
+    .attr("text-anchor", "end")
+    .attr("stroke", "black")
+    .text("Highway Milage");
+
+
+   const summary = [
+{
+    note: {
+    label: "There is a large cluster of vehicles getting around 20 MPG with a small number of electric vehicles around 100",
+    title: "Represents all makes and models milage",
+    align: "left",
+    wrap: 180,
+    padding: 3
+    },
+    color: "black",
+    x: 250,
+    y: 275,
+    dy: 20,
+    dx: 40
+}
+]
+
+var buildAnnotation = d3.annotation().annotations(summary)
+d3.select('svg').append("g")
+    .style("font-size", "12px")
+    .call(buildAnnotation)
 }
 
 
