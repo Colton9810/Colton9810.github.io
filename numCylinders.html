@@ -9,10 +9,12 @@
 <h1>Efficiency by Number of Cylinders</h1>
 </div>
 
-<!-- Create the div for the main slide show -->
-<div style="text-align:center;">
-<svg id="svgMain" width="500" height="500" style="background-color:beige"></svg>
+<div id="popup" style="text-align:center"> </div>
+   
+<div style="text-align:center">
+   <svg id="svgMain" width="500" height="500" style="background-color:beige"></svg>
 </div>
+
 <div style="text-align:center;">
 <svg id="svgNav" width="200" height="200"></svg>
 </div>
@@ -56,6 +58,15 @@ async function init() {
 
    var xs = d3.scaleBand().domain(["0","2","3","4","6","8","10","12"]).range([0,500]);
    var ys = d3.scaleLinear().domain([0,150]).range([500,0]);
+   var tooltip = d3.select('.tooltip-area').style('opacity', 0);
+
+   const mouseover = (d, i) => {
+        document.getElementById('popup').innerHTML = "<p> Number of Cylinders: " + d.Number + " | Average Milage: " + d.Average + "</p>";
+      };
+
+   const mouseleave = (d, i) => {
+         document.getElementById('popup').innerHTML = ""
+      }
 
    var leftArrow = d3.select(svgNav).append("g")
     .attr("transform", "translate(100,60) scale(0.5, 1.0) rotate(180)")
@@ -99,6 +110,8 @@ async function init() {
                 .attr('height', function (d) {return ys(0) -ys(d.Average) })
                 .attr('fill', 'lightblue')
                 .attr('stroke', 'black') 
+                .on("mouseleave", mouseleave)
+                .on("mouseover", mouseover);
 
    d3.select('svg').append("text")
     .attr("transform", "rotate(-90)")
@@ -126,10 +139,29 @@ async function init() {
 }
 ]
 
+const hoverTip = [
+{
+    note: {
+    label: "Hover of the bars for more details!",
+    align: "left",
+    wrap: 180,
+    padding: 3
+    },
+    color: "black",
+    x: 330,
+    y: 0,
+}
+]
+
 var buildAnnotation = d3.annotation().annotations(summary)
 d3.select('svg').append("g")
     .style("font-size", "12px")
     .call(buildAnnotation)
+
+var buildAnnotation2 = d3.annotation().annotations(hoverTip)
+d3.select('svg').append("g")
+    .style("font-size", "12px")
+    .call(buildAnnotation2)
 }
 
 
